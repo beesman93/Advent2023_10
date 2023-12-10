@@ -116,40 +116,25 @@ for (int i = 0; i < map.Count; i++)
             {
                 if (map[i][jj] == '|')
                     count_intersects_right++;
-                if (map[i][jj] == 'F')
+                if (map[i][jj] == 'F' || map[i][jj] == 'L')
                 {
                     int jjj = jj;
                     bool isIntersect = false;
                     while (jjj < map[i].Count)
                     {
                         if (map[i][jjj] == '7')
+                        {
+                            isIntersect = map[i][jj] == 'L';
                             break;
+                        }
                         if (map[i][jjj] == 'J')
                         {
-                            isIntersect = true;
+                            isIntersect = map[i][jj] == 'F';
                             break;
                         }
                         jjj++;
                     }
                     if(isIntersect)
-                        count_intersects_right++;
-                }
-                if (map[i][jj] == 'L')
-                {
-                    int jjj = jj;
-                    bool isIntersect = false;
-                    while (jjj < map[i].Count)
-                    {
-                        if (map[i][jjj] == 'J')
-                            break;
-                        if (map[i][jjj] == '7')
-                        {
-                            isIntersect = true;
-                            break;
-                        }
-                        jjj++;
-                    }
-                    if (isIntersect)
                         count_intersects_right++;
                 }
                 jj++;
