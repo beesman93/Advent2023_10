@@ -28,7 +28,7 @@ for (int iters = 0; iters < 1000; iters++)
     {
         map.Add(new());
         boundry.Add(new());
-        for (int j = 0; j < lines.Count; j++)
+        for (int j = 0; j < lines[0].Length; j++)
         {
             map.Last().Add(lines[i][j]);
             boundry.Last().Add(false);
