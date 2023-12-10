@@ -9,94 +9,100 @@ using (StreamReader reader = new(args[0]))
 
 
 List<List<char>> map = new();
-List<List<int>> boundry = new();
+List<List<bool>> boundry = new();
 
-int x=0, y=0;
+int xOrigin=0, yOrigin=0;
 
-foreach (string line in lines)
+for(int i=0;i<lines.Count;i++)
 {
     map.Add(new());
     boundry.Add(new());
-    foreach (char c in line)
+    for(int j=0;j<lines.Count;j++)
     {
-        map.Last().Add(c);
-        boundry.Last().Add(0);
-    }
-}
-
-for (int i = 0; i < map.Count; i++)
-{
-    for (int j = 0; j < map[i].Count; j++)
-    {
+        map.Last().Add(lines[i][j]);
+        boundry.Last().Add(false);
         if (map[i][j] == 'S')
         {
-            x = i;
-            y = j;
+            xOrigin = i;
+            yOrigin = j;
         }
     }
 }
 
-int max_x = 0;
-int max_y = 0;
+boundry[xOrigin][yOrigin] = true;
+coord prev = new coord(xOrigin, yOrigin);
 
-int min_x = int.MaxValue;
-int min_y = int.MaxValue;
+bool canGoUp, canGoDown, canGoLeft, canGoRight;
+canGoUp=canGoDown=canGoLeft=canGoRight=false;
 
-coord prev = new coord(x,y);
+if (xOrigin - 1 > 0 &&(
+    map[xOrigin - 1][yOrigin]=='|' ||
+    map[xOrigin - 1][yOrigin] == 'F' ||
+    map[xOrigin - 1][yOrigin] == '7')
+    ) canGoUp=true;
+if (xOrigin + 1 < map.Count && (
+    map[xOrigin + 1][yOrigin] == '|' ||
+    map[xOrigin + 1][yOrigin] == 'L' ||
+    map[xOrigin + 1][yOrigin] == 'J')
+    ) canGoDown = true;
+if (yOrigin - 1 > 0 && (
+    map[xOrigin][yOrigin - 1] == '-' ||
+    map[xOrigin][yOrigin - 1] == 'F' ||
+    map[xOrigin][yOrigin - 1] == 'L')
+    ) canGoLeft = true;
+if (yOrigin + 1 < map[0].Count && (
+    map[xOrigin][yOrigin + 1] == '-' ||
+    map[xOrigin][yOrigin + 1] == '7' ||
+    map[xOrigin][yOrigin + 1] == 'J')
+    ) canGoRight = true;
 
-boundry[x][y] = 1;
+if (canGoUp && canGoDown) map[xOrigin][yOrigin] = '|';
+if (canGoUp && canGoLeft) map[xOrigin][yOrigin] = 'J';
+if (canGoUp && canGoRight) map[xOrigin][yOrigin] = 'L';
+if (canGoDown && canGoLeft) map[xOrigin][yOrigin] = '7';
+if (canGoDown && canGoRight) map[xOrigin][yOrigin] = 'F';
+if (canGoLeft && canGoRight) map[xOrigin][yOrigin] = '-';
 
-coord firstPath = new coord(x+1, y);
+coord firstPath = new coord(xOrigin, yOrigin);
+if (canGoUp)
+    firstPath.x--;
+else if (canGoDown)
+    firstPath.x++;
+else if (canGoRight)
+    firstPath.y++;
+else
+    throw new Exception("Start should be able to go to 2 points.");
+
 
 int pathLen = 0;
-while (firstPath.x!=x||firstPath.y!=y)
+while (firstPath.x!= xOrigin || firstPath.y!= yOrigin)
 {
-    boundry[firstPath.x][firstPath.y] = 1;
+    boundry[firstPath.x][firstPath.y] = true;
 
     char c = map[firstPath.x][firstPath.y];
     coord newCo = moveNext(c, firstPath, prev, map);
     prev = firstPath;
     firstPath = newCo;
     pathLen++;
-
-    if (firstPath.x > max_x) max_x = firstPath.x;
-    if (firstPath.x < min_x) min_x = firstPath.x;
-    if (firstPath.y > max_y) max_y = firstPath.y;
-    if (firstPath.y < min_y) min_y = firstPath.y;
-
 }
 
-Console.WriteLine(Math.Ceiling(pathLen / 2.0));
-
-map[x][y] = '7';
+Console.WriteLine(Math.Ceiling(pathLen / 2.0));//part 1
 
 for (int i = 0; i < map.Count; i++)
 {
     for (int j = 0; j < map[i].Count; j++)
     {
-        if (boundry[i][j] == 0)
+        if (!boundry[i][j])
             map[i][j] = '.';
     }
 }
-
-/*
-for (int i = 0; i < map.Count; i++)
-{
-    for (int j = 0; j < map[i].Count; j++)
-    {
-        Console.Write(map[i][j]);
-    }
-    Console.WriteLine();
-}
-Console.WriteLine();
-Console.WriteLine();*/
 
 int points_in = 0;
 for (int i = 0; i < map.Count; i++)
 {
     for (int j = 0; j < map[i].Count; j++)
     {
-        if (boundry[i][j] == 0)
+        if (!boundry[i][j])
         {
             int count_intersects_right = 0;
 
@@ -147,27 +153,11 @@ for (int i = 0; i < map.Count; i++)
             if (count_intersects_right % 2 == 1)
             {
                 points_in++;
-                //Console.WriteLine($"{i},{j}");
             }
         }
     }
 }
-Console.WriteLine(points_in);
-
-
-
-/*
- * | is a vertical pipe connecting north and south.
-- is a horizontal pipe connecting east and west.
-L is a 90-degree bend connecting north and east.
-J is a 90-degree bend connecting north and west.
-7 is a 90-degree bend connecting south and west.
-F is a 90-degree bend connecting south and east.
-. is ground; there is no pipe in this tile.
-S is the starting position of the animal; there is a pipe on this tile, but your sketch doesn't show what shape the pipe has.
-*/
-
-
+Console.WriteLine(points_in); //part 2
 coord moveNext(char c, coord curr, coord prev, List<List<char>> map)
 {
     if(c == '|')
