@@ -1,6 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Generic;
+using System.Diagnostics;
 
 Stopwatch sw = Stopwatch.StartNew();
+
+Console.Clear();
+Thread.Sleep(10);
 
 List<string> lines = new();
 using (StreamReader reader = new(args[0]))
@@ -11,21 +15,23 @@ using (StreamReader reader = new(args[0]))
     }
 }
 long readInputTime = sw.ElapsedMilliseconds;
-Console.WriteLine($"readInput in {readInputTime} ms");
+//Console.WriteLine($"readInput in {readInputTime} ms");
 
 List<List<char>> map = new();
 List<List<bool>> boundry = new();
 
 int xOrigin=0, yOrigin=0;
+int pathLen = 0;
+int points_in = 0;
 
-for(int i=0;i<lines.Count;i++)
+for (int i=0;i<lines.Count;i++)
 {
     map.Add(new());
     boundry.Add(new());
-    for(int j=0;j<lines.Count;j++)
-    {
+    for(int j = 0; j < lines[i].Length;j++)
+    { 
         map.Last().Add(lines[i][j]);
-        boundry.Last().Add(false);
+        boundry.Last().Add(false);      
         if (map[i][j] == 'S')
         {
             xOrigin = i;
@@ -34,8 +40,12 @@ for(int i=0;i<lines.Count;i++)
     }
 }
 
+//drawMap(map,boundry,pathLen,points_in);
+
 boundry[xOrigin][yOrigin] = true;
 coord prev = new(xOrigin, yOrigin);
+
+drawMap(map, boundry, pathLen, points_in);
 
 bool canGoUp, canGoDown, canGoLeft, canGoRight;
 canGoUp=canGoDown=canGoLeft=canGoRight=false;
@@ -78,12 +88,14 @@ else if (canGoRight)
 else
     throw new Exception("Start should be able to go to 2 points.");
 
+//drawMap(map, boundry, pathLen, points_in);
 
-int pathLen = 0;
+
 while (firstPath.x!= xOrigin || firstPath.y!= yOrigin)
 {
     boundry[firstPath.x][firstPath.y] = true;
-
+    mapAns(pathLen,points_in);
+    drawMapXY(firstPath.x,firstPath.y,map, boundry, pathLen, points_in);
     char c = map[firstPath.x][firstPath.y];
     coord newCo = moveNext(c, firstPath, prev, map);
     prev = firstPath;
@@ -91,26 +103,34 @@ while (firstPath.x!= xOrigin || firstPath.y!= yOrigin)
     pathLen++;
 }
 
-Console.WriteLine(Math.Ceiling(pathLen / 2.0));//part 1
+//drawMap(map, boundry, pathLen, points_in);
+
+pathLen = (int)Math.Ceiling(pathLen / 2.0);
+
+drawMap(map, boundry, pathLen, points_in);
 
 for (int i = 0; i < map.Count; i++)
 {
     for (int j = 0; j < map[i].Count; j++)
     {
         if (!boundry[i][j])
-            map[i][j] = '.';
+            map[i][j] = ' ';
+        //drawMapXY(i, j, map, boundry, pathLen, points_in);
     }
 }
 
-int points_in = 0;
-Parallel.For (0,map.Count, (i,state)=>
+drawMap(map, boundry, pathLen, points_in);
+
+for (int i=0; i < map.Count; i++)
 {
     for (int j = 0; j < map[i].Count; j++)
     {
         if (!boundry[i][j])
         {
+            map[i][j] = '0';
+            //drawMapXY(i, j, map, boundry, pathLen, points_in);
             int count_intersects_right = 0;
-
+            
             int jj = j;
             while (jj < map[i].Count)
             {
@@ -137,18 +157,115 @@ Parallel.For (0,map.Count, (i,state)=>
                     if(isIntersect)
                         count_intersects_right++;
                 }
+                
                 jj++;
+                map[i][j] = (char)((count_intersects_right % 2)+48);
+                
             }
+            //drawMapXY(i, j, map, boundry, pathLen, points_in);
+            
             if (count_intersects_right % 2 == 1)
             {
-                Interlocked.Increment(ref points_in);
+                points_in++;
+                mapAns(pathLen, points_in);
             }
+            drawMapXY(i, j, map, boundry, pathLen, points_in);
         }
     }
-});
-Console.WriteLine(points_in); //part 2
+}
 
-Console.WriteLine($"solutions in {sw.ElapsedMilliseconds-readInputTime} ms ({sw.ElapsedMilliseconds} ms total)");
+//drawMap(map, boundry, pathLen, points_in);
+
+//Console.WriteLine(points_in); //part 2
+
+//Console.WriteLine($"solutions in {sw.ElapsedMilliseconds-readInputTime} ms ({sw.ElapsedMilliseconds} ms total)");
+
+
+static void drawMapXY(int x, int y, List<List<char>> map, List<List<bool>> boundry,int ans_1,int ans_2)
+{
+    Console.SetCursorPosition(y,x+4);
+
+    if (boundry[x][y])
+        Console.ForegroundColor = ConsoleColor.Blue;
+    else if (map[x][y] >= '0' && map[x][y] <= '2')
+    {
+        if (Convert.ToInt32(map[x][y]) % 2 == 1)
+            Console.ForegroundColor = ConsoleColor.Green;
+        else
+            Console.ForegroundColor = ConsoleColor.Red;
+    }
+    else
+        Console.ForegroundColor = ConsoleColor.White;
+    char c = map[x][y] switch
+    {
+        '|' => '│',
+        '-' => '─',
+        'L' => '└',
+        'J' => '┘',
+        '7' => '┐',
+        'F' => '┌',
+        '0' => '0',
+        '1' => '1',
+        _ => map[x][y],
+    };
+    Console.Write(c);
+    Console.ForegroundColor = ConsoleColor.White;
+
+}
+
+static void mapAns(int ans_1, int ans_2)
+{
+    Console.SetCursorPosition(0, 0);
+
+    Console.WriteLine();
+    Console.WriteLine($"solution1: {ans_1}   ");
+    Console.WriteLine($"solution2: {ans_2}   ");
+    Console.WriteLine();
+}
+
+static void drawMap(List<List<char>> map, List<List<bool>> boundry, int ans_1, int ans_2)
+{
+    Console.SetCursorPosition(0, 0);
+
+    Console.WriteLine();
+    Console.WriteLine($"solution1: {ans_1}   ");
+    Console.WriteLine($"solution2: {ans_2}   ");
+    Console.WriteLine();
+
+    for (int x = 0; x < map.Count; x++)
+    {
+        for (int y = 0; y < map[x].Count; y++)
+        {
+            if (boundry[x][y])
+                Console.ForegroundColor = ConsoleColor.Blue;
+            else if (map[x][y] >= '0' && map[x][y] <= '2')
+            {
+                if (Convert.ToInt32(map[x][y]) % 2 == 1)
+                    Console.ForegroundColor = ConsoleColor.Green;
+                else
+                    Console.ForegroundColor = ConsoleColor.Red;
+            }
+            else
+                Console.ForegroundColor = ConsoleColor.White;
+            char c = map[x][y] switch
+            {
+                '|' => '│',
+                '-' => '─',
+                'L' => '└',
+                'J' => '┘',
+                '7' => '┐',
+                'F' => '┌',
+                '0' => '0',
+                '1' => '1',
+                _ => map[x][y],
+            };
+            Console.Write(c);
+        }
+        Console.WriteLine();
+    }
+
+    Thread.Sleep(10);
+}
 
 static coord moveNext(char c, coord curr, coord prev, List<List<char>> map)
 {
