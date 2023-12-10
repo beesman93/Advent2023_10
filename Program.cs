@@ -1,4 +1,8 @@
-﻿List<string> lines = new();
+﻿using System.Diagnostics;
+
+Stopwatch sw = Stopwatch.StartNew();
+
+List<string> lines = new();
 using (StreamReader reader = new(args[0]))
 {
     while (!reader.EndOfStream)
@@ -6,7 +10,8 @@ using (StreamReader reader = new(args[0]))
         lines.Add(reader.ReadLine());
     }
 }
-
+long readInputTime = sw.ElapsedMilliseconds;
+Console.WriteLine($"readInput in {readInputTime} ms");
 
 List<List<char>> map = new();
 List<List<bool>> boundry = new();
@@ -158,6 +163,8 @@ for (int i = 0; i < map.Count; i++)
     }
 }
 Console.WriteLine(points_in); //part 2
+
+Console.WriteLine($"solutions in {sw.ElapsedMilliseconds-readInputTime} ms ({sw.ElapsedMilliseconds} ms total)");
 coord moveNext(char c, coord curr, coord prev, List<List<char>> map)
 {
     if(c == '|')
