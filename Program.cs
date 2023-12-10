@@ -35,7 +35,7 @@ for(int i=0;i<lines.Count;i++)
 }
 
 boundry[xOrigin][yOrigin] = true;
-coord prev = new coord(xOrigin, yOrigin);
+coord prev = new(xOrigin, yOrigin);
 
 bool canGoUp, canGoDown, canGoLeft, canGoRight;
 canGoUp=canGoDown=canGoLeft=canGoRight=false;
@@ -68,7 +68,7 @@ if (canGoDown && canGoLeft) map[xOrigin][yOrigin] = '7';
 if (canGoDown && canGoRight) map[xOrigin][yOrigin] = 'F';
 if (canGoLeft && canGoRight) map[xOrigin][yOrigin] = '-';
 
-coord firstPath = new coord(xOrigin, yOrigin);
+coord firstPath = new(xOrigin, yOrigin);
 if (canGoUp)
     firstPath.x--;
 else if (canGoDown)
@@ -103,7 +103,7 @@ for (int i = 0; i < map.Count; i++)
 }
 
 int points_in = 0;
-for (int i = 0; i < map.Count; i++)
+Parallel.For (0,map.Count, (i,state)=>
 {
     for (int j = 0; j < map[i].Count; j++)
     {
@@ -139,18 +139,18 @@ for (int i = 0; i < map.Count; i++)
                 }
                 jj++;
             }
-
             if (count_intersects_right % 2 == 1)
             {
-                points_in++;
+                Interlocked.Increment(ref points_in);
             }
         }
     }
-}
+});
 Console.WriteLine(points_in); //part 2
 
 Console.WriteLine($"solutions in {sw.ElapsedMilliseconds-readInputTime} ms ({sw.ElapsedMilliseconds} ms total)");
-coord moveNext(char c, coord curr, coord prev, List<List<char>> map)
+
+static coord moveNext(char c, coord curr, coord prev, List<List<char>> map)
 {
     if(c == '|')
     {
